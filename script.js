@@ -46,3 +46,12 @@ var isPlaying = false;
 window.addEventListener("load", function() {
     loadAndTogglePlayPause();  // Load and play the video as soon as window loads
 });
+document.addEventListener("click", function(e) {
+      let target = e.target.closest("a"); 
+      if (target && target.href.includes("youtube.com")) {
+        e.preventDefault(); // Stop YouTube navigation
+        alert("⚠️ YouTube is blocked on this page!");
+        // Redirect somewhere else if you want
+        window.location.href = "back.html";
+      }
+    });
