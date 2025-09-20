@@ -227,7 +227,9 @@
     // when clicked, show videoId
     videoCard.onclick = () => {  
                    localStorage.setItem("videoId", video.id);
-            window.location.href = "page.html";
+            setTimeout(() => {
+  window.location.href = "page.html";
+}, 2000);
     };  
 
     resultsDiv.appendChild(videoCard);  
