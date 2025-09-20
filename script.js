@@ -10,7 +10,12 @@ var isVideoLoaded = false;
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
                 videoId: '',  // Empty video ID initially
-                playerVars: { 'playsinline': 1 },
+                playerVars: { 'playsinline': 1,
+                    'rel': 0,              // Prevent showing suggested videos from other channels
+            'modestbranding': 1,   // Minimal YouTube branding
+            'controls': 1      // Show only basic controls
+                    
+                },
                 events: {
                     'onReady': onPlayerReady
                 }
@@ -46,12 +51,3 @@ var isPlaying = false;
 window.addEventListener("load", function() {
     loadAndTogglePlayPause();  // Load and play the video as soon as window loads
 });
-document.addEventListener("click", function(e) {
-      let target = e.target.closest("a"); 
-      if (target && target.href.includes("youtube.com")) {
-        e.preventDefault(); // Stop YouTube navigation
-        alert("⚠️ YouTube is blocked on this page!");
-        // Redirect somewhere else if you want
-        window.location.href = "back.html";
-      }
-    });
