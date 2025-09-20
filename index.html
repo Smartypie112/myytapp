@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bottom Navigation App Bar</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #121212; /* Dark background */
+      color: #e0e0e0;
+    }
+
+    /* Content area with iframe */
+    .content {
+      flex: 1;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Bottom navigation - Dark theme */
+    .bottom-nav {
+      height: 60px;
+      background: #1e1e1e; /* Dark nav background */
+      border-top: 1px solid #333;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.6);
+    }
+
+    .nav-item {
+      flex: 1;
+      text-align: center;
+      color: #aaa; /* muted text */
+      cursor: pointer;
+      padding: 8px 0;
+      transition: color 0.3s, transform 0.2s;
+    }
+
+    .nav-item.active {
+      color: #6f9eff; /* Highlight color */
+      font-weight: 600;
+      transform: translateY(-2px); /* slight lift effect */
+    }
+
+    .nav-item i {
+      font-size: 20px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover {
+      color: #fff; /* brighter on hover */
+    }
+  </style>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Content area with iframe -->
+  <div class="content">
+    <iframe id="contentFrame" src="search.html"></iframe>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item " onclick="setActive(this, 'channel.html')">
+      <i class="fas fa-tv"></i>
+      Channels
+    </div>
+    <div class="nav-item active" onclick="setActive(this, 'search.html')">
+      <i class="fas fa-search"></i>
+      Search
+    </div>
+    <div class="nav-item" onclick="setActive(this, 'playlist.html')">
+      <i class="fas fa-list"></i>
+      Playlists
+    </div>
+  </div>
+
+  <script>
+    function setActive(element, page) {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      element.classList.add('active');
+      document.getElementById('contentFrame').src = page;
+    }
+  </script>
+
+</body>
+</html>
