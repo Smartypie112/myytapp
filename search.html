@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Search</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      color: #0f0f0f;
+    }
+
+    /* Top Navbar */
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background: white;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    header h1 {
+      font-size: 20px;
+      margin: 0;
+      margin-right: 20px;
+      color: red;
+    }
+
+    #search-bar {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    #query {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 20px 0 0 20px;
+      outline: none;
+    }
+
+    #search-button {
+      padding: 10px 20px;
+      border: 1px solid #ddd;
+      border-left: none;
+      background: #f8f8f8;
+      border-radius: 0 20px 20px 0;
+      cursor: pointer;
+    }
+
+    #search-button:hover {
+      background: #e6e6e6;
+    }
+
+    /* Results grid */
+    #results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    /* Video Card */
+    .video-card {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .video-card:hover {
+      transform: scale(1.02);
+    }
+
+    .thumbnail {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .video-info {
+      padding: 10px;
+    }
+
+    .video-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin: 0 0 8px 0;
+      color: #0f0f0f;
+    }
+
+    .channel-name {
+      font-size: 14px;
+      color: #606060;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    
+    <div id="search-bar">
+      <input type="text" id="query" placeholder="Search" />
+      <button id="search-button" onclick="searchVideos()">🔍</button>
+    </div>
+  </header>
+
+  <div id="results"></div>
+
+  <script>
+    const API_KEY = "AIzaSyDDbyrMDQoMkvDzRz72p9JM_C09Ee8lX9M"; // Replace with your YouTube API key
+
+    async function searchVideos() {
+      const query = document.getElementById("query").value;
+      if (!query) return alert("Please enter a search term");
+
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=20&q=${encodeURIComponent(query)}&key=${API_KEY}`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "";
+
+        if (data.items) {
+          data.items.forEach(item => {
+            const videoId = item.id.videoId;
+            const title = item.snippet.title;
+            const channel = item.snippet.channelTitle;
+            const thumbnail = item.snippet.thumbnails.high.url;
+
+            const videoCard = document.createElement("div");
+videoCard.className = "video-card";
+videoCard.innerHTML = `
+  <img class="thumbnail" src="${thumbnail}" alt="${title}">
+  <div class="video-info">
+    <p class="video-title">${title}</p>
+    <p class="channel-name">${channel}</p>
+  </div>
+`;
+
+// Show videoId on click
+videoCard.onclick = () => {
+                     localStorage.setItem("videoId", videoId);
+            window.location.href = "page.html";
+};
+
+resultsDiv.appendChild(videoCard);
+          });
+        } else {
+          resultsDiv.innerHTML = "<p>No results found.</p>";
+        }
+      } catch (error) {
+        console.error("Error fetching videos:", error);
+      }
+    }
+  </script>
+</body>
+</html>

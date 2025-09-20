@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">  
+<head>  
+  <meta charset="UTF-8">  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+  <title>YouTube Multi-Channel Viewer</title>  
+  <style>  
+    body {  
+      margin: 0;  
+      font-family: Arial, sans-serif;  
+      background: #f9f9f9;  
+      color: #0f0f0f;  
+    }  
+    header {  
+      display: flex;  
+      align-items: center;  
+      padding: 10px 20px;  
+      background: white;  
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);  
+      position: sticky;  
+      top: 0;  
+      z-index: 1000;  
+    }  
+    header h1 {  
+      font-size: 20px;  
+      margin: 0;  
+      margin-right: 20px;  
+      color: red;  
+    }  
+    #search-bar {  
+      display: none;  
+      flex: 1;  
+    }  
+    #search-input {  
+      width: 100%;  
+      padding: 8px 12px;  
+      border: 1px solid #ccc;  
+      border-radius: 5px;  
+      font-size: 14px;  
+    }  
+    #results {  
+      display: grid;  
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));  
+      gap: 20px;  
+      padding: 20px;  
+    }  
+    .channel-card, .video-card {  
+      background: white;  
+      border-radius: 10px;  
+      overflow: hidden;  
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);  
+      cursor: pointer;  
+      transition: transform 0.2s ease;  
+      text-align: center;  
+      padding: 10px;  
+    }  
+    .channel-card:hover, .video-card:hover {  
+      transform: scale(1.05);  
+    }  
+    .channel-logo {  
+      width: 40px;  
+      height: 40px;  
+      border-radius: 50%;  
+      object-fit: cover;  
+      margin-bottom: 10px;  
+    }  
+    .channel-name {  
+      font-size: 16px;  
+      font-weight: bold;  
+      color: #0f0f0f;  
+    }  
+    .thumbnail {  
+      width: 100%;  
+      height: 160px;  
+      object-fit: cover;  
+    }  
+    .video-info {  
+      padding: 10px;  
+    }  
+    .video-title {  
+      font-size: 14px;  
+      font-weight: bold;  
+      margin: 0 0 8px 0;  
+      color: #0f0f0f;  
+    }  
+    #back-button {  
+      display: none;  
+      margin-left: 15px;  
+      padding: 10px 20px;  
+      background: red;  
+      color: white;  
+      border: none;  
+      border-radius: 5px;  
+      cursor: pointer;  
+    }  
+    #back-button:hover {  
+      background: darkred;  
+    }  
+  </style>  
+</head>  
+<body>  
+  <header>  
+    <h1>YouTube</h1>  
+    <div id="search-bar">  
+      <input type="text" id="search-input" placeholder="Search videos...">  
+    </div>  
+    <button id="back-button" onclick="showChannels()">⬅ Back</button>  
+  </header>  
+  <div id="results"></div>  
+
+  <script>  
+    const API_KEY = "AIzaSyDDbyrMDQoMkvDzRz72p9JM_C09Ee8lX9M";  
+
+    const channelIds = [  
+      "UCX8pnu3DYUnx8qy8V_c6oHg", // MrBeast  
+      "UCcH14Dtj4EYN4cWL6K7GB_g", // PewDiePie  
+      "UCXZCJLdBC09xxGZ6gcdrc6A",  
+      "UCQCflB1jT0LitJ6NX9K9bzA",  
+      "UC0_36RirUPzzsFWaLJ-yfGg",  
+      "UC9JWnvl5ZjZv09F5RqiLptw",  
+      "UCNQ6FEtztATuaVhZKCY28Yw",  
+      "UC6k0UlWg59GNng1T-3X71DA",  
+      "UCeVMnSShP_Iviwkknt83cww",  
+      "UCB_-0P6W66yGIXZKQxKU1Gw",  
+      "UCu6PQg9Kqb75QgyWdSNj5tA",  
+      "UCa4Q2SMe99fsdVVIanG1lKA",  
+      "UClUh1FzPxbpxysPfBZ0Axmg",  
+      "UCxgAuX3XZROujMmGphN_scA",  
+      "UChJ9UVLK2rchSIUvVwhuq6Q",  
+      "UCZNUF1G26zL87DoWEBzEi1g",  
+      "UCgoyBmLOMNWmsiVkj-MezyQ",  
+      "UCbKU5qxsfkOy36Hj-eceSQQ",  
+      "UCPyc10wO1RRJj7QHVbpfitA",  
+      "UCRdRLYSzRs92xVghFID6oTw",  
+    ];  
+
+    let currentView = "channels";  
+    let allVideos = [];  
+
+    async function showChannels() {  
+      currentView = "channels";  
+      document.getElementById("back-button").style.display = "none";  
+      document.getElementById("search-bar").style.display = "none";  
+      const resultsDiv = document.getElementById("results");  
+      resultsDiv.innerHTML = "";  
+
+      for (const id of channelIds) {  
+        const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${id}&key=${API_KEY}`;  
+        const response = await fetch(url);  
+        const data = await response.json();  
+
+        if (currentView !== "channels") return;  
+
+        if (data.items && data.items.length > 0) {  
+          const channel = data.items[0].snippet;  
+          const logo = channel.thumbnails.high.url;  
+          const name = channel.title;  
+
+          const card = document.createElement("div");  
+          card.className = "channel-card";  
+          card.innerHTML = `  
+            <img src="${logo}" class="channel-logo" alt="${name}">  
+            <p class="channel-name">${name}</p>  
+          `;  
+          card.onclick = () => loadChannelVideos(id);  
+
+          resultsDiv.appendChild(card);  
+        }  
+      }  
+    }  
+
+    async function loadChannelVideos(channelId) {  
+      currentView = "videos";  
+      document.getElementById("back-button").style.display = "inline-block";  
+      document.getElementById("search-bar").style.display = "flex";  
+      const resultsDiv = document.getElementById("results");  
+      resultsDiv.innerHTML = "";  
+      allVideos = []; // reset  
+
+      try {  
+        const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${API_KEY}`;  
+        const channelResponse = await fetch(channelUrl);  
+        const channelData = await channelResponse.json();  
+        const uploadsId = channelData.items[0].contentDetails.relatedPlaylists.uploads;  
+
+        let nextPageToken = "";  
+        do {  
+          const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${uploadsId}&key=${API_KEY}${nextPageToken ? "&pageToken=" + nextPageToken : ""}`;  
+          const playlistResponse = await fetch(playlistUrl);  
+          const playlistData = await playlistResponse.json();  
+
+          if (currentView !== "videos") return;  
+
+          if (playlistData.items) {  
+            playlistData.items.forEach(item => {  
+              const videoId = item.snippet.resourceId.videoId;  
+              const title = item.snippet.title;  
+              const thumbnail = item.snippet.thumbnails.high.url;  
+
+              allVideos.push({ id: videoId, title: title, thumbnail: thumbnail });  
+            });  
+          }  
+
+          nextPageToken = playlistData.nextPageToken || null;  
+        } while (nextPageToken);  
+
+        displayVideos(allVideos);  
+      } catch (error) {  
+        console.error("Error fetching channel videos:", error);  
+      }  
+    }  
+
+    function displayVideos(videos) {  
+  const resultsDiv = document.getElementById("results");  
+  resultsDiv.innerHTML = "";  
+
+  videos.forEach(video => {  
+    const videoCard = document.createElement("div");  
+    videoCard.className = "video-card";  
+    videoCard.innerHTML = `  
+      <img class="thumbnail" src="${video.thumbnail}" alt="${video.title}">  
+      <div class="video-info">  
+        <p class="video-title">${video.title}</p>  
+      </div>  
+    `;  
+
+    // when clicked, show videoId
+    videoCard.onclick = () => {  
+                   localStorage.setItem("videoId", video.id);
+            window.location.href = "page.html";
+    };  
+
+    resultsDiv.appendChild(videoCard);  
+  });  
+}
+
+    document.getElementById("search-input").addEventListener("input", (e) => {  
+      const query = e.target.value.toLowerCase();  
+      const filtered = allVideos.filter(v => v.title.toLowerCase().includes(query));  
+      displayVideos(filtered);  
+    });  
+
+    showChannels();  
+  </script>  
+</body>  
+</html>

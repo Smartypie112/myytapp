@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YouTube Playlists & Videos</title>
+  <style>
+    body {
+      font-family: Roboto, Arial, sans-serif;
+      background: #f9f9f9;
+      color: #0f0f0f;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #202020;
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 20px; margin: 0; }
+    header button {
+      background: #ff0000;
+      border: none;
+      padding: 8px 16px;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    header button:hover { background: #cc0000; }
+
+    .container { padding: 20px; }
+
+    /* Playlist cards */
+    .playlist-card {
+      display: inline-block;
+      width: 250px;
+      margin: 12px;
+      cursor: pointer;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .playlist-card:hover { transform: scale(1.05); }
+    .playlist-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+    .playlist-card h2 {
+      font-size: 16px;
+      margin: 8px;
+      color: #0f0f0f;
+    }
+    .playlist-card p {
+      font-size: 13px;
+      color: #606060;
+      margin: 0 8px 12px;
+      height: 40px;
+      overflow: hidden;
+    }
+
+    /* Playlist view */
+    .playlist-view { display: none; }
+    .playlist-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .playlist-header img {
+      width: 180px;
+      border-radius: 8px;
+      margin-right: 16px;
+    }
+    .playlist-header h2 { margin: 0; font-size: 22px; }
+    .playlist-header p {
+      margin: 8px 0 0;
+      font-size: 14px;
+      color: #606060;
+      max-width: 600px;
+    }
+    .back-btn {
+      background: #eee;
+      border: none;
+      padding: 8px 16px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    /* Videos grid */
+    .videos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .video {
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .video:hover { transform: scale(1.03); }
+    .video iframe { width: 100%; height: 160px; border: none; }
+    .video h3 {
+      font-size: 14px;
+      margin: 8px;
+      color: #0f0f0f;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>YouTube Playlists</h1>
+      </header>
+
+  <div class="container">
+    <div id="playlists"></div>
+    <div id="playlist-view" class="playlist-view"></div>
+  </div>
+
+  <script>
+    const API_KEY = "AIzaSyDDbyrMDQoMkvDzRz72p9JM_C09Ee8lX9M"; // 🔑 Replace with your YouTube Data API key
+
+    const playlistIds = [
+      "PLu0W_9lII9agq5TrH9XLIKQvv0iaF2X3w",
+      "PLrUQMdTf-qAg22gQ_ASWzoKEMarEp8xat"
+    ];
+
+    const playlistsContainer = document.getElementById("playlists");
+    const playlistView = document.getElementById("playlist-view");
+
+    let currentAbortController = null; // 🚀 Keep track of active fetches
+
+    async function loadPlaylists() {
+      // cancel ongoing fetch if any
+      if (currentAbortController) {
+        currentAbortController.abort();
+      }
+
+      playlistsContainer.innerHTML = "";
+      playlistView.style.display = "none";
+      playlistsContainer.style.display = "block";
+
+      for (let playlistId of playlistIds) {
+        const playlistUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&id=${playlistId}&key=${API_KEY}`;
+        try {
+          const response = await fetch(playlistUrl);
+          const data = await response.json();
+          if (data.items && data.items.length > 0) {
+            const playlist = data.items[0];
+            const card = document.createElement("div");
+            card.className = "playlist-card";
+            card.innerHTML = `
+              <img src="${playlist.snippet.thumbnails.medium.url}" alt="${playlist.snippet.title}">
+              <h2>${playlist.snippet.title}</h2>
+              <p>${playlist.snippet.description || "No description"}</p>
+            `;
+            card.onclick = () => openPlaylist(playlistId, playlist);
+            playlistsContainer.appendChild(card);
+          }
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            console.error("Error fetching playlist:", error);
+            playlistsContainer.innerHTML += `<p>Error fetching playlist ${playlistId}</p>`;
+          }
+        }
+      }
+    }
+
+    async function openPlaylist(playlistId, playlist) {
+      // cancel ongoing fetch
+      if (currentAbortController) {
+        currentAbortController.abort();
+      }
+      currentAbortController = new AbortController();
+
+      playlistsContainer.style.display = "none";
+      playlistView.style.display = "block";
+      playlistView.innerHTML = `
+        <button class="back-btn" onclick="backToPlaylists()">⬅ Back to Playlists</button>
+        <div class="playlist-header">
+          <img src="${playlist.snippet.thumbnails.medium.url}" alt="${playlist.snippet.title}">
+          <div>
+            <h2>${playlist.snippet.title} (${playlist.contentDetails.itemCount} videos)</h2>
+            <p>${playlist.snippet.description || "No description"}</p>
+          </div>
+        </div>
+        <div class="videos">Loading videos...</div>
+      `;
+
+      await getVideos(playlistId, playlistView.querySelector(".videos"), currentAbortController.signal);
+    }
+
+    function backToPlaylists() {
+      // cancel API fetch immediately
+      if (currentAbortController) {
+        currentAbortController.abort();
+      }
+      // clear videos to free memory
+      playlistView.innerHTML = "";
+      loadPlaylists();
+    }
+
+    async function getVideos(playlistId, videosContainer, signal) {
+  let nextPageToken = "";
+  videosContainer.innerHTML = "";
+
+  do {
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=30&pageToken=${nextPageToken}&key=${API_KEY}`;
+    try {
+      const response = await fetch(url, { signal });
+      const data = await response.json();
+
+      if (data.items && data.items.length > 0) {
+        data.items.forEach(item => {
+          const videoId = item.snippet.resourceId.videoId;
+          const title = item.snippet.title;
+          const thumbnail = item.snippet.thumbnails.medium.url;
+
+          const v = document.createElement("div");
+          v.className = "video";
+          v.dataset.videoId = videoId; // ✅ store video ID in dataset
+          v.innerHTML = `
+            <img src="${thumbnail}" alt="${title}" style="width:100%;height:160px;object-fit:cover;border-bottom:1px solid #ddd;">
+            <h3>${title}</h3>
+          `;
+
+          // optional: click handler to open video
+          v.onclick = () => {
+             localStorage.setItem("videoId", videoId);
+            window.location.href = "page.html";
+            // or window.open(`https://www.youtube.com/watch?v=${videoId}`, "_blank");
+          };
+
+          videosContainer.appendChild(v);
+        });
+      }
+
+      nextPageToken = data.nextPageToken || "";
+    } catch (error) {
+      if (error.name === "AbortError") {
+        console.log("Fetch aborted");
+        return;
+      }
+      console.error("Error fetching videos:", error);
+      videosContainer.innerHTML += "<p>Error loading videos.</p>";
+      break;
+    }
+  } while (nextPageToken);
+}
+  window.onload = function () {
+  loadPlaylists(); // your function
+};
+  </script>
+</body>
+</html>
