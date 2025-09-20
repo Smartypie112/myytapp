@@ -236,7 +236,9 @@
           // optional: click handler to open video
           v.onclick = () => {
              localStorage.setItem("videoId", videoId);
-            window.location.href = "page.html";
+            setTimeout(() => {
+  window.location.href = "page.html";
+}, 2000);
             // or window.open(`https://www.youtube.com/watch?v=${videoId}`, "_blank");
           };
 
