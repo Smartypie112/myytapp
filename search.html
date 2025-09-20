@@ -150,7 +150,9 @@ videoCard.innerHTML = `
 // Show videoId on click
 videoCard.onclick = () => {
                      localStorage.setItem("videoId", videoId);
-            window.location.href = "page.html";
+            setTimeout(() => {
+  window.location.href = "page.html";
+}, 2000);
 };
 
 resultsDiv.appendChild(videoCard);
