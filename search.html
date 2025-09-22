@@ -155,8 +155,8 @@
       const query = document.getElementById("query").value;
       if (!query) return alert("Please enter a search term");
 
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=20&q=${encodeURIComponent(query)}&key=${API_KEY}`;
-
+      const url = `https://cors-anywhere.herokuapp.com/https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query)}`;
+      
       try {
         const response = await fetch(url);
         const data = await response.json();
