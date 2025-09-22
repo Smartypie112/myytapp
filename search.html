@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Search with Suggestions</title>
+  <title>YouTube Search Clone</title>
   <style>
     body {
       margin: 0;
@@ -22,20 +22,18 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      flex-direction: column;
     }
 
     #search-bar {
+      flex: 1;
       display: flex;
       align-items: center;
-      width: 100%;
-      max-width: 600px;
       position: relative;
     }
 
     #query {
       flex: 1;
-      padding: 10px 35px 10px 10px; /* space for clear button */
+      padding: 10px;
       font-size: 16px;
       border: 1px solid #ddd;
       border-radius: 20px 0 0 20px;
@@ -44,14 +42,13 @@
 
     #clear-btn {
       position: absolute;
-      right: 60px; /* sits inside input box */
-      background: none;
-      border: none;
+      right: 60px;
       font-size: 18px;
       cursor: pointer;
-      color: #666;
-      display: none; /* hidden until text typed */
+      color: #888;
+      display: none;
     }
+
     #clear-btn:hover {
       color: #000;
     }
@@ -69,26 +66,30 @@
       background: #e6e6e6;
     }
 
-    /* Suggestions dropdown */
+    /* Suggestion Box */
     #suggestions {
       position: absolute;
       top: 45px;
       left: 0;
-      right: 0;
+      width: 100%;
       background: white;
       border: 1px solid #ddd;
-      border-radius: 8px;
-      max-height: 250px;
+      border-top: none;
+      max-height: 300px;
       overflow-y: auto;
       display: none;
-      z-index: 2000;
+      z-index: 1001;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     }
-    #suggestions div {
+
+    .suggestion-item {
       padding: 10px;
       cursor: pointer;
     }
-    #suggestions div:hover {
-      background: #f1f1f1;
+
+    .suggestion-item:hover {
+      background: #f0f0f0;
     }
 
     /* Results grid */
@@ -106,7 +107,6 @@
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       transition: transform 0.2s ease;
-      cursor: pointer;
     }
 
     .video-card:hover {
@@ -139,8 +139,8 @@
 <body>
   <header>
     <div id="search-bar">
-      <input type="text" id="query" placeholder="Search" oninput="handleInput()" />
-      <button id="clear-btn" onclick="clearSearch()">✖</button>
+      <input type="text" id="query" placeholder="Search" />
+      <span id="clear-btn">✖</span>
       <button id="search-button" onclick="searchVideos()">🔍</button>
       <div id="suggestions"></div>
     </div>
@@ -149,36 +149,11 @@
   <div id="results"></div>
 
   <script>
-    const API_KEY = "AIzaSyDDbyrMDQoMkvDzRz72p9JM_C09Ee8lX9M"; // 🔑 Replace with your own YouTube API key
-    const suggestionsBox = document.getElementById("suggestions");
-    const queryInput = document.getElementById("query");
-    const clearBtn = document.getElementById("clear-btn");
+    const API_KEY = "AIzaSyDDbyrMDQoMkvDzRz72p9JM_C09Ee8lX9M"; // Replace with your YouTube API key
 
-    // Show/hide clear button + trigger suggestions
-    function handleInput() {
-      if (queryInput.value.trim()) {
-        clearBtn.style.display = "block";
-        showSuggestions();
-      } else {
-        clearBtn.style.display = "none";
-        suggestionsBox.style.display = "none";
-      }
-    }
-
-    // Clear input text
-    function clearSearch() {
-      queryInput.value = "";
-      clearBtn.style.display = "none";
-      suggestionsBox.style.display = "none";
-      queryInput.focus();
-    }
-
-    // 🔍 Search videos
     async function searchVideos() {
-      const query = queryInput.value;
+      const query = document.getElementById("query").value;
       if (!query) return alert("Please enter a search term");
-
-      suggestionsBox.style.display = "none"; // hide suggestions after search
 
       const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=20&q=${encodeURIComponent(query)}&key=${API_KEY}`;
 
@@ -206,7 +181,6 @@
               </div>
             `;
 
-            // On click → open video page
             videoCard.onclick = () => {
               localStorage.setItem("videoId", videoId);
               window.location.href = "page.html";
@@ -222,41 +196,65 @@
       }
     }
 
-    // ✨ Show search suggestions
-    async function showSuggestions() {
-      const query = queryInput.value.trim();
+    // Fetch YouTube suggestions
+    async function fetchSuggestions(query) {
       if (!query) {
-        suggestionsBox.style.display = "none";
+        document.getElementById("suggestions").style.display = "none";
         return;
       }
 
-      try {
-        // ✅ Google/YouTube unofficial autocomplete API
-        const res = await fetch(`https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query)}`);
-        const data = await res.json();
+      const url = `https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query)}`;
 
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const suggestionsBox = document.getElementById("suggestions");
         suggestionsBox.innerHTML = "";
-        if (data[1].length > 0) {
-          data[1].forEach(s => {
-            const div = document.createElement("div");
-            div.textContent = s;
-            div.onclick = () => {
-              queryInput.value = s;
-              clearBtn.style.display = "block";
+
+        if (data[1] && data[1].length > 0) {
+          data[1].forEach(suggestion => {
+            const item = document.createElement("div");
+            item.className = "suggestion-item";
+            item.textContent = suggestion;
+
+            item.onclick = () => {
+              document.getElementById("query").value = suggestion;
               suggestionsBox.style.display = "none";
               searchVideos();
             };
-            suggestionsBox.appendChild(div);
+
+            suggestionsBox.appendChild(item);
           });
           suggestionsBox.style.display = "block";
         } else {
           suggestionsBox.style.display = "none";
         }
-      } catch (err) {
-        console.error("Error fetching suggestions:", err);
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
       }
     }
+
+    // Input typing
+    const queryInput = document.getElementById("query");
+    queryInput.addEventListener("input", (e) => {
+      document.getElementById("clear-btn").style.display = e.target.value ? "block" : "none";
+      fetchSuggestions(e.target.value);
+    });
+
+    // Clear button
+    document.getElementById("clear-btn").addEventListener("click", () => {
+      queryInput.value = "";
+      document.getElementById("clear-btn").style.display = "none";
+      document.getElementById("suggestions").style.display = "none";
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#search-bar") && !e.target.closest("#suggestions")) {
+        document.getElementById("suggestions").style.display = "none";
+      }
+    });
   </script>
 </body>
-  </html>
-    
+  </html>                  
