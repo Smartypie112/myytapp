@@ -276,7 +276,7 @@ input:focus {
 }
 #player {
   position:relative;
-  top:-20vh;        
+  top:-2vh;        
   height:90vh;
   width:100vw;
 }
